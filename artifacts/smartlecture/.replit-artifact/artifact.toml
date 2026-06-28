@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SmartLecture AI"
+version = "1.0.0"
+id = "artifacts/smartlecture"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25793
+
+[services.development]
+run = "pnpm --filter @workspace/smartlecture run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smartlecture", "run", "build" ]
+publicDir = "artifacts/smartlecture/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25793"
+BASE_PATH = "/"

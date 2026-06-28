@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SmartLecture AI API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: lectures
+    description: Lecture management
+  - name: flashcards
+    description: Flashcard decks and cards
+  - name: quizzes
+    description: Quizzes and quiz attempts
+  - name: user
+    description: User profile and progress
+  - name: achievements
+    description: Achievements and streaks
+  - name: assistant
+    description: AI study assistant
+  - name: search
+    description: Global search
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,510 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResult"
+
+  /user/profile:
+    get:
+      operationId: getProfile
+      tags: [user]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+    patch:
+      operationId: updateProfile
+      tags: [user]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  /user/stats:
+    get:
+      operationId: getUserStats
+      tags: [user]
+      summary: Get XP, streaks, level, weekly activity
+      responses:
+        "200":
+          description: User stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserStats"
+
+  /user/progress:
+    get:
+      operationId: getUserProgress
+      tags: [user]
+      summary: Get study progress analytics
+      responses:
+        "200":
+          description: Progress data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProgress"
+
+  /achievements:
+    get:
+      operationId: getAchievements
+      tags: [achievements]
+      summary: Get all achievements (locked and unlocked)
+      responses:
+        "200":
+          description: Achievement list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Achievement"
+
+  /lectures:
+    get:
+      operationId: getLectures
+      tags: [lectures]
+      summary: List all lectures
+      parameters:
+        - name: subject
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lecture list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lecture"
+    post:
+      operationId: createLecture
+      tags: [lectures]
+      summary: Create a lecture
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LectureInput"
+      responses:
+        "201":
+          description: Created lecture
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lecture"
+
+  /lectures/recent:
+    get:
+      operationId: getRecentLectures
+      tags: [lectures]
+      summary: Get recently viewed lectures
+      responses:
+        "200":
+          description: Recent lectures
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lecture"
+
+  /lectures/subjects:
+    get:
+      operationId: getSubjects
+      tags: [lectures]
+      summary: Get all subjects with lecture counts
+      responses:
+        "200":
+          description: Subject list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+
+  /lectures/{id}:
+    get:
+      operationId: getLecture
+      tags: [lectures]
+      summary: Get a single lecture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Lecture detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LectureDetail"
+    patch:
+      operationId: updateLecture
+      tags: [lectures]
+      summary: Update a lecture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LectureUpdate"
+      responses:
+        "200":
+          description: Updated lecture
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lecture"
+    delete:
+      operationId: deleteLecture
+      tags: [lectures]
+      summary: Delete a lecture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /lectures/{id}/summary:
+    get:
+      operationId: getLectureSummary
+      tags: [lectures]
+      summary: Get AI-generated summary for a lecture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: AI summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LectureSummary"
+
+  /lectures/{id}/mindmap:
+    get:
+      operationId: getLectureMindmap
+      tags: [lectures]
+      summary: Get mind map data for a lecture
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Mind map nodes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MindMap"
+
+  /flashcard-decks:
+    get:
+      operationId: getFlashcardDecks
+      tags: [flashcards]
+      summary: List all flashcard decks
+      responses:
+        "200":
+          description: Deck list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FlashcardDeck"
+    post:
+      operationId: createFlashcardDeck
+      tags: [flashcards]
+      summary: Create a flashcard deck
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardDeckInput"
+      responses:
+        "201":
+          description: Created deck
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashcardDeck"
+
+  /flashcard-decks/{id}:
+    get:
+      operationId: getFlashcardDeck
+      tags: [flashcards]
+      summary: Get a flashcard deck with its cards
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deck with cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FlashcardDeckDetail"
+
+  /flashcard-decks/{id}/cards:
+    post:
+      operationId: addFlashcard
+      tags: [flashcards]
+      summary: Add a card to a deck
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FlashcardInput"
+      responses:
+        "201":
+          description: Created card
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Flashcard"
+
+  /flashcard-decks/{id}/study:
+    post:
+      operationId: recordFlashcardStudy
+      tags: [flashcards]
+      summary: Record a study session result for a deck
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudySessionInput"
+      responses:
+        "200":
+          description: XP and streak update
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/XpUpdate"
+
+  /quizzes:
+    get:
+      operationId: getQuizzes
+      tags: [quizzes]
+      summary: List all quizzes
+      responses:
+        "200":
+          description: Quiz list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quiz"
+    post:
+      operationId: createQuiz
+      tags: [quizzes]
+      summary: Create a quiz
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizInput"
+      responses:
+        "201":
+          description: Created quiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quiz"
+
+  /quizzes/{id}:
+    get:
+      operationId: getQuiz
+      tags: [quizzes]
+      summary: Get a quiz with its questions
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Quiz detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizDetail"
+
+  /quizzes/{id}/attempt:
+    post:
+      operationId: submitQuizAttempt
+      tags: [quizzes]
+      summary: Submit answers and get score
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuizAttemptInput"
+      responses:
+        "200":
+          description: Quiz result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizResult"
+
+  /assistant/chat:
+    post:
+      operationId: chatWithAssistant
+      tags: [assistant]
+      summary: Send a message to AI study assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "200":
+          description: Assistant reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+
+  /assistant/history:
+    get:
+      operationId: getChatHistory
+      tags: [assistant]
+      summary: Get recent chat history with assistant
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+
+  /search:
+    get:
+      operationId: globalSearch
+      tags: [search]
+      summary: Search across lectures, flashcards, quizzes
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResults"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +550,578 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    LoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+
+    RegisterInput:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+
+    AuthResult:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/UserProfile"
+
+    UserProfile:
+      type: object
+      required: [id, name, email, avatar, level, xp, streak]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        bio:
+          type: ["string", "null"]
+        level:
+          type: integer
+        xp:
+          type: integer
+        streak:
+          type: integer
+        joinedAt:
+          type: string
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+        avatar:
+          type: string
+
+    UserStats:
+      type: object
+      required: [xp, level, streak, totalStudyMinutes, lecturesCount, flashcardsReviewed, quizzesCompleted, weeklyActivity, xpToNextLevel]
+      properties:
+        xp:
+          type: integer
+        level:
+          type: integer
+        xpToNextLevel:
+          type: integer
+        streak:
+          type: integer
+        totalStudyMinutes:
+          type: integer
+        lecturesCount:
+          type: integer
+        flashcardsReviewed:
+          type: integer
+        quizzesCompleted:
+          type: integer
+        weeklyActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/DayActivity"
+
+    DayActivity:
+      type: object
+      required: [day, minutes, xp]
+      properties:
+        day:
+          type: string
+        minutes:
+          type: integer
+        xp:
+          type: integer
+
+    UserProgress:
+      type: object
+      required: [subjectProgress, monthlyStudy, recentActivity]
+      properties:
+        subjectProgress:
+          type: array
+          items:
+            $ref: "#/components/schemas/SubjectProgress"
+        monthlyStudy:
+          type: array
+          items:
+            $ref: "#/components/schemas/MonthlyStudy"
+        recentActivity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityItem"
+
+    SubjectProgress:
+      type: object
+      required: [subject, color, lecturesTotal, lecturesCompleted, avgQuizScore]
+      properties:
+        subject:
+          type: string
+        color:
+          type: string
+        lecturesTotal:
+          type: integer
+        lecturesCompleted:
+          type: integer
+        avgQuizScore:
+          type: integer
+
+    MonthlyStudy:
+      type: object
+      required: [month, hours]
+      properties:
+        month:
+          type: string
+        hours:
+          type: number
+
+    ActivityItem:
+      type: object
+      required: [id, type, title, description, xpEarned, createdAt]
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        xpEarned:
+          type: integer
+        createdAt:
+          type: string
+
+    Achievement:
+      type: object
+      required: [id, title, description, icon, category, xpReward, unlocked]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        category:
+          type: string
+        xpReward:
+          type: integer
+        unlocked:
+          type: boolean
+        unlockedAt:
+          type: ["string", "null"]
+        progress:
+          type: ["integer", "null"]
+        progressMax:
+          type: ["integer", "null"]
+
+    Lecture:
+      type: object
+      required: [id, title, subject, subjectColor, duration, status, createdAt, tags]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subject:
+          type: string
+        subjectColor:
+          type: string
+        duration:
+          type: integer
+        status:
+          type: string
+          enum: [processing, ready, error]
+        transcript:
+          type: ["string", "null"]
+        thumbnailUrl:
+          type: ["string", "null"]
+        tags:
+          type: array
+          items:
+            type: string
+        viewCount:
+          type: integer
+        createdAt:
+          type: string
+
+    LectureDetail:
+      allOf:
+        - $ref: "#/components/schemas/Lecture"
+        - type: object
+          properties:
+            summary:
+              type: ["string", "null"]
+            keyPoints:
+              type: array
+              items:
+                type: string
+            flashcardDeckId:
+              type: ["integer", "null"]
+            quizId:
+              type: ["integer", "null"]
+
+    LectureInput:
+      type: object
+      required: [title, subject]
+      properties:
+        title:
+          type: string
+        subject:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        transcript:
+          type: string
+
+    LectureUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        subject:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+
+    LectureSummary:
+      type: object
+      required: [lectureId, summary, keyPoints, concepts]
+      properties:
+        lectureId:
+          type: integer
+        summary:
+          type: string
+        keyPoints:
+          type: array
+          items:
+            type: string
+        concepts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Concept"
+
+    Concept:
+      type: object
+      required: [term, definition]
+      properties:
+        term:
+          type: string
+        definition:
+          type: string
+
+    MindMap:
+      type: object
+      required: [lectureId, nodes, edges]
+      properties:
+        lectureId:
+          type: integer
+        nodes:
+          type: array
+          items:
+            $ref: "#/components/schemas/MindMapNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/MindMapEdge"
+
+    MindMapNode:
+      type: object
+      required: [id, label, level, color]
+      properties:
+        id:
+          type: string
+        label:
+          type: string
+        level:
+          type: integer
+        color:
+          type: string
+        description:
+          type: ["string", "null"]
+
+    MindMapEdge:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+
+    Subject:
+      type: object
+      required: [name, color, lectureCount, icon]
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        icon:
+          type: string
+        lectureCount:
+          type: integer
+
+    FlashcardDeck:
+      type: object
+      required: [id, title, subject, subjectColor, cardCount, masteredCount, dueCount, lastStudied, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subject:
+          type: string
+        subjectColor:
+          type: string
+        cardCount:
+          type: integer
+        masteredCount:
+          type: integer
+        dueCount:
+          type: integer
+        lastStudied:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    FlashcardDeckDetail:
+      allOf:
+        - $ref: "#/components/schemas/FlashcardDeck"
+        - type: object
+          required: [cards]
+          properties:
+            cards:
+              type: array
+              items:
+                $ref: "#/components/schemas/Flashcard"
+
+    FlashcardDeckInput:
+      type: object
+      required: [title, subject]
+      properties:
+        title:
+          type: string
+        subject:
+          type: string
+        lectureId:
+          type: integer
+
+    Flashcard:
+      type: object
+      required: [id, deckId, front, back, mastered]
+      properties:
+        id:
+          type: integer
+        deckId:
+          type: integer
+        front:
+          type: string
+        back:
+          type: string
+        mastered:
+          type: boolean
+        difficulty:
+          type: ["string", "null"]
+
+    FlashcardInput:
+      type: object
+      required: [front, back]
+      properties:
+        front:
+          type: string
+        back:
+          type: string
+
+    StudySessionInput:
+      type: object
+      required: [cardsReviewed, correctCount, durationSeconds]
+      properties:
+        cardsReviewed:
+          type: integer
+        correctCount:
+          type: integer
+        durationSeconds:
+          type: integer
+
+    XpUpdate:
+      type: object
+      required: [xpEarned, newTotalXp, newLevel, streakUpdated]
+      properties:
+        xpEarned:
+          type: integer
+        newTotalXp:
+          type: integer
+        newLevel:
+          type: integer
+        streakUpdated:
+          type: boolean
+        newStreak:
+          type: integer
+
+    Quiz:
+      type: object
+      required: [id, title, subject, subjectColor, questionCount, bestScore, attempts, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        subject:
+          type: string
+        subjectColor:
+          type: string
+        questionCount:
+          type: integer
+        bestScore:
+          type: ["integer", "null"]
+        attempts:
+          type: integer
+        createdAt:
+          type: string
+
+    QuizDetail:
+      allOf:
+        - $ref: "#/components/schemas/Quiz"
+        - type: object
+          required: [questions]
+          properties:
+            questions:
+              type: array
+              items:
+                $ref: "#/components/schemas/Question"
+
+    QuizInput:
+      type: object
+      required: [title, subject]
+      properties:
+        title:
+          type: string
+        subject:
+          type: string
+        lectureId:
+          type: integer
+
+    Question:
+      type: object
+      required: [id, quizId, text, options, correctIndex]
+      properties:
+        id:
+          type: integer
+        quizId:
+          type: integer
+        text:
+          type: string
+        options:
+          type: array
+          items:
+            type: string
+        correctIndex:
+          type: integer
+        explanation:
+          type: ["string", "null"]
+
+    QuizAttemptInput:
+      type: object
+      required: [answers]
+      properties:
+        answers:
+          type: array
+          items:
+            type: integer
+
+    QuizResult:
+      type: object
+      required: [score, correctCount, totalCount, xpEarned, passed, questionResults]
+      properties:
+        score:
+          type: integer
+        correctCount:
+          type: integer
+        totalCount:
+          type: integer
+        xpEarned:
+          type: integer
+        passed:
+          type: boolean
+        questionResults:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionResult"
+
+    QuestionResult:
+      type: object
+      required: [questionId, correct, selectedIndex, correctIndex]
+      properties:
+        questionId:
+          type: integer
+        correct:
+          type: boolean
+        selectedIndex:
+          type: integer
+        correctIndex:
+          type: integer
+        explanation:
+          type: ["string", "null"]
+
+    ChatMessageInput:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        lectureId:
+          type: ["integer", "null"]
+
+    ChatMessage:
+      type: object
+      required: [id, role, content, createdAt]
+      properties:
+        id:
+          type: integer
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        createdAt:
+          type: string
+
+    SearchResults:
+      type: object
+      required: [lectures, flashcardDecks, quizzes]
+      properties:
+        lectures:
+          type: array
+          items:
+            $ref: "#/components/schemas/Lecture"
+        flashcardDecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/FlashcardDeck"
+        quizzes:
+          type: array
+          items:
+            $ref: "#/components/schemas/Quiz"
